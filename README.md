@@ -25,54 +25,6 @@ This document captures the **technical foundation** I use when leading or contri
 
 ---
 
-## High-Level Architecture
-
-```mermaid
-flowchart TB
-    subgraph presentation["Presentation Layer"]
-        Pages["Pages / Screens"]
-        Widgets["Feature Widgets"]
-        Cubits["Cubits / State Builders"]
-    end
-
-    subgraph domain["Domain Layer"]
-        Entities["Entities"]
-        UseCases["Use Cases"]
-        RepoContracts["Repository Contracts"]
-    end
-
-    subgraph data["Data Layer"]
-        RepoImpl["Repository Implementations"]
-        RemoteDS["Remote Data Sources"]
-        LocalDS["Local Data Sources"]
-        Models["DTOs / Mappers"]
-    end
-
-    subgraph core["Core & Shared"]
-        Network["HTTP Client + Interceptors"]
-        Storage["Secure + Local Storage"]
-        Routing["Typed Navigation + Guards"]
-        DI["Dependency Injection"]
-        Errors["Failure Taxonomy"]
-        Components["Reusable UI Kit"]
-    end
-
-    Pages --> Cubits
-    Cubits --> UseCases
-    UseCases --> RepoContracts
-    RepoImpl --> RepoContracts
-    RepoImpl --> RemoteDS
-    RepoImpl --> LocalDS
-    RemoteDS --> Network
-    LocalDS --> Storage
-    Models --> Entities
-    Cubits --> Errors
-    DI --> UseCases
-    DI --> RepoImpl
-    Pages --> Components
-    Pages --> Routing
-```
-
 **Dependency rule:** outer layers depend inward. Domain never imports Flutter, Dio, or platform SDKs.
 
 ---
@@ -86,23 +38,22 @@ lib/
 ├── injection_container.dart     # Service locator entry point
 │
 ├── core/                        # Cross-cutting infrastructure
-│   ├── boilerplate/             # Reusable state/UI patterns (cubits, builders)
-│   ├── config/                  # Environment bindings, startup sequence
-│   ├── constants/               # Global enums, settings, feature flags
-│   ├── error/                   # Failure types and mapping
-│   ├── network/                 # Client, interceptors, connectivity
-│   ├── routing/                 # Declarative routes + auth/session guards
-│   ├── services/                # Logging, notifications, OTA, navigation helpers
-│   ├── storage/                 # Secure prefs, local DB abstractions
-│   ├── usecases/                # Base UseCase contract
-│   └── utils/                   # Validators, formatters, platform helpers
+│   # Reusable state/UI patterns (cubits, builders)
+│   # Environment bindings, startup sequence
+│   # Global enums, settings, feature flags
+│   # Failure types and mapping
+│   # Client, interceptors, connectivity
+│   # Declarative routes + auth/session guards
+│   # Logging, notifications, OTA, navigation helpers
+│   # Secure prefs, local DB abstractions
+│   # Base UseCase contract
+│   # Validators, formatters, platform helpers
 │
 ├── components/                  # Shared, brand-agnostic UI & utilities
-│   ├── widgets/                 # Design-system primitives (buttons, fields, receipts…)
-│   ├── theming/                 # Theme tokens, typography, component styles
-│   ├── scaffold_component/      # Composable layout shells
-│   ├── services/                # Cross-feature services (maps, notifications…)
-│   └── features/                # Small reusable feature fragments
+│   # Design-system primitives (buttons, fields, receipts…)
+│   # Theming
+│   # Cross-feature services (maps, notifications…)
+│   # Small reusable feature fragments
 │
 ├── features/                    # Business verticals — one folder per capability
 │   └── <feature_name>/
@@ -281,7 +232,6 @@ The `components/` theming layer consumes brand tokens so feature code stays bran
 | `freezed` | Immutable unions / copy-with for states and entities |
 | `auto_mappr` | DTO ↔ entity mapping |
 | `objectbox_generator` | Local DB schemas |
-| `theme_tailor` | Type-safe theme extensions |
 | `flutter_gen` | Asset and font references |
 
 Codegen reduces drift between layers — especially critical when API schemas change frequently in active fintech products.
@@ -333,35 +283,6 @@ Presentation maps failures to user-visible copy, retry actions, or forced re-aut
 
 ---
 
-## Typical Request Flow (Transfer / Payment)
-
-```mermaid
-sequenceDiagram
-    participant UI as Presentation
-    participant UC as UseCaseCubit
-    participant U as UseCase
-    participant R as Repository
-    participant API as Remote Data Source
-
-    UI->>UC: request(params)
-    UC->>UC: emit Loading
-    UC->>U: call(params)
-    U->>R: fetch / submit
-    R->>API: HTTP
-    API-->>R: Response / Error
-    R-->>U: Either Failure or Entity
-    U-->>UC: Either Failure or Entity
-    alt Success
-        UC->>UC: emit Loaded
-        UI->>UI: Navigate to summary / receipt
-    else Failure
-        UC->>UC: emit Error
-        UI->>UI: Show mapped error / retry
-    end
-```
-
----
-
 ## Testing Strategy
 
 | Layer | Focus |
@@ -369,7 +290,6 @@ sequenceDiagram
 | **Domain** | Use case unit tests with mocked repositories; assert `Either` outcomes |
 | **Data** | Mapper tests, repository integration with mocked Dio |
 | **Presentation** | Cubit state transitions; golden tests for critical financial screens |
-| **E2E** | Happy-path flows: login → transfer → receipt (staging environment) |
 
 Financial calculations, fee previews, and validation rules are tested in domain/presentation utils — not only on device.
 
