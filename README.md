@@ -119,8 +119,8 @@ Each domain follows the **same folder contract**, so onboarding a new engineer o
 
 I standardize on **flutter_bloc** with two core abstractions:
 
-1. **`UseCaseCubit`** — wraps any `UseCase`, handles `UseCaseInitial → Loading → Loaded | Error` lifecycle, and keeps request params for retry.
-2. **`StateBuilder`** — thin `BlocConsumer` wrapper for local/ephemeral UI state that does not warrant a full feature cubit.
+1. **`UseCaseBloc`** — wraps any `UseCase`, handles `UseCaseInitial → Loading → Loaded | Error` lifecycle, and keeps request params for retry.
+2. **`StateBlocBuilder`** — thin `BlocConsumer` wrapper for local/ephemeral UI state that does not warrant a full feature cubit.
 
 This keeps async money flows consistent: every financial action has an explicit loading state, a typed success payload, and a mapped failure that the UI can render without parsing raw exceptions.
 
